@@ -1,29 +1,55 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "./zombiehelper.sol";
+import "./zombiefeeding.sol";
 
-contract ZombieAttack is ZombieHelper {
-  uint randNonce = 0;
-  uint attackVictoryProbability = 70;
+contract ZombieHelper is ZombieFeeding {
 
-  function randMod(uint _modulus) internal returns(uint) {
-    randNonce++;
-    return uint(keccak256(abi.encodePacked(now, msg.sender, randNonce))) % _modulus;
+  uint levelUpFee = 0.001 ether;
+
+  modifier aboveLevel(uint _level, uint _zombieId) {
+    require(zombies[_zombieId].level >= _level);
+    _;
   }
 
-  function attack(uint _zombieId, uint _targetId) external ownerOf(_zombieId) {
-    Zombie storage myZombie = zombies[_zombieId];
-    Zombie storage enemyZombie = zombies[_targetId];
-    uint rand = randMod(100);
-    if (rand <= attackVictoryProbability) {
-      myZombie.winCount++;
-      myZombie.level++;
-      enemyZombie.lossCount++;
-      feedAndMultiply(_zombieId, enemyZombie.dna, "zombie");
-    } else{
-      myZombie.lossCount++;
-      enemyZombie.winCount++;
-      _triggerCooldown(myZombie);
+  function withdraw() external onlyOwner {
+    address _owner = owner();
+    _owner.transfer(address(this).balance);
+  }
+
+
+
+  function setLevelUpFee(uint _fee) external onlyOwner {
+    levelUpFee = _fee;
+  }
+
+/*payable functions are part of what makes Solidity and Ethereum so cool — they are a special type of function that can receive Ether.
+
+After you send Ether to a contract, it gets stored in the contract's Ethereum account, and it will be trapped there —
+ unless you add a function to withdraw the Ether from the contract.*/
+
+  function levelUp(uint _zombieId) external payable {
+    require(msg.value == levelUpFee);
+    zombies[_zombieId].level++;
+  }
+
+  function changeName(uint _zombieId, string calldata _newName) external aboveLevel(2, _zombieId) ownerOf(_zombieId) {
+    zombies[_zombieId].name = _newName;
+  }
+
+  function changeDna(uint _zombieId, uint _newDna) external aboveLevel(20, _zombieId) ownerOf(_zombieId) {
+    zombies[_zombieId].dna = _newDna;
+  }
+
+  function getZombiesByOwner(address _owner) external view returns(uint[] memory) {
+    uint[] memory result = new uint[](ownerZombieCount[_owner]);
+    uint counter = 0;
+    for (uint i = 0; i < zombies.length; i++) {
+      if (zombieToOwner[i] == _owner) {
+        result[counter] = i;
+        counter++;
+      }
     }
+    return result;
   }
+
 }
