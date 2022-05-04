@@ -16,6 +16,11 @@ contract ZombieFactory is Ownable {
       uint32 level;
       uint32 readyTime;
     }
+    /*Solidity reserves 256 bits of storage regardless of the uint size.
+     For example, using uint8 instead of uint (uint256) won't save you any gas.
+
+     If you have multiple uints inside a struct, using a smaller-sized uint
+      when possible will allow Solidity to pack these variables together to take up less storage.*/
 
     Zombie[] public zombies;
 
@@ -24,6 +29,7 @@ contract ZombieFactory is Ownable {
 
     function _createZombie(string memory _name, uint _dna) internal {
         uint id = zombies.push(Zombie(_name, _dna, 1, uint32(now + cooldownTime))) - 1;
+        /*The uint32(...) is necessary because now returns a uint256 by default. So we need to explicitly convert it to a uint32.*/
         zombieToOwner[id] = msg.sender;
         ownerZombieCount[msg.sender]++;
         emit NewZombie(id, _name, _dna);

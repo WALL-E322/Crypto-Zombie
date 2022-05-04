@@ -25,6 +25,7 @@ contract ZombieFeeding is ZombieFactory {
     kittyContract = KittyInterface(_address);
   }
 
+  //You can pass a storage pointer to a struct as an argument to a private or internal function.
   function _triggerCooldown(Zombie storage _zombie) internal {
     _zombie.readyTime = uint32(now + cooldownTime);
   }
