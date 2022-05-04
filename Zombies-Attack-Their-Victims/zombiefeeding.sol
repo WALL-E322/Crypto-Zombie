@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "./zombiefactory.sol";
-
+ 
 /*For our contract to talk to another contract on the blockchain that we don't own, first we need to define an interface.
 
 By including this interface in our dapp's code our contract knows what the other contract's functions look like,
